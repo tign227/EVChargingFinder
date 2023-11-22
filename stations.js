@@ -70,11 +70,27 @@ locateCurrentPosition()
       lat: stations[minPosition].lat,
       lng: stations[minPosition].lng,
     };
-    console.log(stationPos);
-    var marker = new tt.Marker().setLngLat(stationPos).addTo(map);
-    var popup = new tt.Popup({ anchor: "top" }).setText("Station Postion");
+
+    let address = stations[minPosition].name;
+    let htmlMarker = document.createElement("div");
+    htmlMarker.id = "marker";
+    var marker = new tt.Marker({ element: htmlMarker })
+      .setLngLat(stationPos)
+      .addTo(map);
+
+    var htmlPopup =
+      '<div><span style="color:black">' +
+      "Station Position</span></div><br/>" +
+      '<div><span style="color:blue">' +
+      address +
+      "</span></div><br/>";
+    var popup = new tt.Popup().setHTML(htmlPopup);
     marker.setPopup(popup).togglePopup();
   });
+
+function handleButtonClick(name) {
+  alert(name + " !");
+}
 
 // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [
