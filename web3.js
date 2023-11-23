@@ -4,6 +4,40 @@ const web3 = new Web3(
   )
 );
 
+const reservationAddress = "0x84bB344DD2D46eB3258dbE30fD253dAD40e9d4e1";
+const serviceAddress = "0xfc7B0311E6d858B6014cdbdC39dB7f9f1c6C95B3";
+const accountAddress = "0x9B4E3318d94425d4c1f9E36A34aeE26219B44536";
+const accountABI = [
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "serviceAddress",
+        type: "address",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "url",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "path",
+        type: "string",
+      },
+    ],
+    name: "requestAccount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+];
 const reservationABI = [
   {
     inputs: [
@@ -35,7 +69,6 @@ const reservationABI = [
     type: "function",
   },
 ];
-
 const serviceABI = [
   {
     inputs: [],
@@ -246,61 +279,14 @@ const serviceABI = [
   },
 ];
 
-const accountABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "serviceAddress",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "url",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "path",
-        type: "string",
-      },
-    ],
-    name: "requestAccount",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
-
-const reservationAddress = "0x84bB344DD2D46eB3258dbE30fD253dAD40e9d4e1";
-const serviceAddress = "0xfc7B0311E6d858B6014cdbdC39dB7f9f1c6C95B3";
-const accountAddress = "0x9B4E3318d94425d4c1f9E36A34aeE26219B44536";
+const reservationContract = getContract(reservationABI, reservationAddress);
+const serviceContract = getContract(serviceABI, serviceAddress);
+const accountContract = getContract(accountABI, accountAddress);
 
 let reservationCode;
 let accountResponse;
-
 let walletAddress;
 
-const reservationContract = new web3.eth.Contract(
-  JSON.parse(JSON.stringify(reservationABI)),
-  reservationAddress
-);
-
-const serviceContract = new web3.eth.Contract(
-  JSON.parse(JSON.stringify(serviceABI)),
-  serviceAddress
-);
-
-const accountContract = new web3.eth.Contract(
-  JSON.parse(JSON.stringify(accountABI)),
-  accountAddress
-);
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
@@ -349,6 +335,7 @@ document.getElementById("reservation").addEventListener("click", async () => {
       .on("changed", function (event) {})
       .on("error", console.error);
     console.log(reservationCode);
+    transaction(walletAddress, accountResponse, "0.0000000001");
   } catch (error) {
     console.error("Error calling reservationContract method:", error);
   }
@@ -376,33 +363,41 @@ document.getElementById("pay").addEventListener("click", async () => {
         // remove event from local database
       })
       .on("error", console.error);
-    const web3 = new Web3(window.ethereum);
-    window.ethereum
-      .request({ method: "eth_requestAccounts" })
-      .then((accounts) => {
-        const fromAddress = accounts[0];
-        const toAddress = accountResponse;
-        const amountInWei = web3.utils.toWei("1", "ether");
-        const transactionObject = {
-          from: fromAddress,
-          to: toAddress,
-          value: amountInWei,
-          gas: 21000,
-        };
-
-        web3.eth
-          .sendTransaction(transactionObject)
-          .then((receipt) => {
-            console.log("Transaction receipt:", receipt);
-          })
-          .catch((error) => {
-            console.error("Transaction error:", error);
-          });
-      })
-      .catch((error) => {
-        console.error("MetaMask connection error:", error);
-      });
+    transaction(walletAddress, accountResponse, "0.0000362");
   } catch (error) {
     console.error("Error calling accountContract method:", error);
   }
 });
+
+function transaction(from, to, amount) {
+  const web3 = new Web3(window.ethereum);
+  window.ethereum
+    .request({ method: "eth_requestAccounts" })
+    .then((accounts) => {
+      const fromAddress = from;
+      const toAddress = to;
+      const amountInWei = web3.utils.toWei(amount, "ether");
+      const transactionObject = {
+        from: fromAddress,
+        to: toAddress,
+        value: amountInWei,
+        gas: 21000,
+      };
+
+      web3.eth
+        .sendTransaction(transactionObject)
+        .then((receipt) => {
+          console.log("Transaction receipt:", receipt);
+        })
+        .catch((error) => {
+          console.error("Transaction error:", error);
+        });
+    })
+    .catch((error) => {
+      console.error("MetaMask connection error:", error);
+    });
+}
+
+function getContract(abi, address) {
+  return new web3.eth.Contract(JSON.parse(JSON.stringify(abi)), address);
+}
