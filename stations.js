@@ -87,11 +87,6 @@ locateCurrentPosition()
     var popup = new tt.Popup().setHTML(htmlPopup);
     marker.setPopup(popup).togglePopup();
   });
-
-function handleButtonClick(name) {
-  alert(name + " !");
-}
-
 // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [
   {
