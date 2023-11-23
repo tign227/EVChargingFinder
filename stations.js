@@ -2,10 +2,7 @@ const locateCurrentPosition = () =>
   new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        currLoc = [
-          position["coords"]["longitude"],
-          position["coords"]["latitude"],
-        ];
+        currLoc = [-0.127758, 51.507351];
         resolve(position);
       },
       (error) => {
@@ -37,7 +34,7 @@ locateCurrentPosition()
       zoom: 14,
       interactive: true,
       style: {
-        map: "basic_main", // basic_main, basic_night
+        map: "basic_main",
       },
       stylesVisibility: {
         trafficFlow: false,
@@ -45,8 +42,9 @@ locateCurrentPosition()
       },
     });
     var currPos = { lat: currLoc[1], lng: currLoc[0] };
-    var marker = new tt.Marker().setLngLat(currPos).addTo(map);
-    var popup = new tt.Popup({ anchor: "top" }).setText("Your Postion");
+    var marker = new tt.Marker().setLngLat(currPos);
+    marker.addTo(map);
+    var popup = new tt.Popup({ anchor: "top" }).setText("You are here");
     marker.setPopup(popup).togglePopup();
   })
   .then(() => {
@@ -60,6 +58,9 @@ locateCurrentPosition()
         minPosition = i;
       }
       currStation = [stations[i].lng, stations[i].lat];
+      marker = new tt.Marker().setLngLat(currStation).addTo(map);
+      var popup = new tt.Popup({ anchor: "top" }).setText(stations[i].name);
+      marker.setPopup(popup).togglePopup();
     }
 
     document.getElementById("station").innerHTML =
@@ -71,21 +72,16 @@ locateCurrentPosition()
       lng: stations[minPosition].lng,
     };
 
-    let address = stations[minPosition].name;
-    let htmlMarker = document.createElement("div");
-    htmlMarker.id = "marker";
-    var marker = new tt.Marker({ element: htmlMarker })
-      .setLngLat(stationPos)
-      .addTo(map);
-
-    var htmlPopup =
-      '<div><span style="color:black">' +
-      "Station Position</span></div><br/>" +
-      '<div><span style="color:blue">' +
-      address +
-      "</span></div><br/>";
-    var popup = new tt.Popup().setHTML(htmlPopup);
+    marker = new tt.Marker().setLngLat(stationPos).addTo(map);
+    var popup = new tt.Popup({ anchor: "top" }).setText(
+      stations[minPosition].name
+    );
     marker.setPopup(popup).togglePopup();
+  })
+  .then(() => {
+    marker.on("click", function (event) {
+      console.log(event);
+    });
   });
 // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [
@@ -94,9 +90,9 @@ let stations = [
     lat: 51.507354,
     name: "Sarada Road, Kolkata",
   },
-  { lng: 88.27099571496032, lat: 22.614650585161208, name: "Howrah" },
-  { lng: 88.3733919, lat: 22.7336621, name: "Barrackpore" },
-  { lng: 88.4678824464731, lat: 22.618164109701002, name: "New Town, Kolkata" },
+  { lng: -0.14676, lat: 51.507354, name: "Bhubaneswar" },
+  { lng: -0.13276, lat: 51.511089, name: "Barrackpore" },
+  { lng: -0.13276, lat: 51.11089, name: "New Town, Kolkata" },
   {
     lng: 88.3916758855774,
     lat: 22.60846519471392,
