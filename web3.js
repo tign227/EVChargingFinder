@@ -334,7 +334,7 @@ document.getElementById("reservation").addEventListener("click", async () => {
           filter: {
             myIndexedParam: [20, 21],
             myOtherIndexedParam: "0x123456789...",
-          }, // Using an array means OR: e.g. 20 or 23
+          },
           fromBlock: 0,
         },
         function () {}
@@ -346,9 +346,7 @@ document.getElementById("reservation").addEventListener("click", async () => {
           accountResponse = event.returnValues.result;
         }
       })
-      .on("changed", function (event) {
-        // remove event from local database
-      })
+      .on("changed", function (event) {})
       .on("error", console.error);
     console.log(reservationCode);
   } catch (error) {
@@ -378,7 +376,32 @@ document.getElementById("pay").addEventListener("click", async () => {
         // remove event from local database
       })
       .on("error", console.error);
-    console.log(accountResponse);
+    const web3 = new Web3(window.ethereum);
+    window.ethereum
+      .request({ method: "eth_requestAccounts" })
+      .then((accounts) => {
+        const fromAddress = accounts[0];
+        const toAddress = accountResponse;
+        const amountInWei = web3.utils.toWei("1", "ether");
+        const transactionObject = {
+          from: fromAddress,
+          to: toAddress,
+          value: amountInWei,
+          gas: 21000,
+        };
+
+        web3.eth
+          .sendTransaction(transactionObject)
+          .then((receipt) => {
+            console.log("Transaction receipt:", receipt);
+          })
+          .catch((error) => {
+            console.error("Transaction error:", error);
+          });
+      })
+      .catch((error) => {
+        console.error("MetaMask connection error:", error);
+      });
   } catch (error) {
     console.error("Error calling accountContract method:", error);
   }
