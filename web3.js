@@ -313,28 +313,6 @@ document.getElementById("reservation").addEventListener("click", async () => {
     const url = "http://endpoint-dun.vercel.app/api/reservation";
     const path = "message,reservationCode";
     await reservationContract.methods.makeReservation(url, path).call();
-
-    serviceContract.events
-      .RequestMade(
-        {
-          filter: {
-            myIndexedParam: [20, 21],
-            myOtherIndexedParam: "0x123456789...",
-          },
-          fromBlock: 0,
-        },
-        function () {}
-      )
-      .on("data", function (event) {
-        if (event.returnValues.requestType === "Reservation")
-          reservationCode = event.returnValues.result;
-        else {
-          accountResponse = event.returnValues.result;
-        }
-      })
-      .on("changed", function (event) {})
-      .on("error", console.error);
-    console.log(reservationCode);
     transaction(walletAddress, accountResponse, "0.0000000001");
   } catch (error) {
     console.error("Error calling reservationContract method:", error);
@@ -347,22 +325,22 @@ document.getElementById("pay").addEventListener("click", async () => {
     const url = "http://endpoint-dun.vercel.app/api/account";
     const path = "message,account";
     await accountContract.methods.requestAccount(url, path).call();
-    serviceContract.events
-      .RequestMade(
-        {
-          filter: {
-            myIndexedParam: [20, 21],
-            myOtherIndexedParam: "0x123456789...",
-          }, // Using an array means OR: e.g. 20 or 23
-          fromBlock: 0,
-        },
-        function () {}
-      )
-      .on("data", function (event) {})
-      .on("changed", function (event) {
-        // remove event from local database
-      })
-      .on("error", console.error);
+    // serviceContract.events
+    //   .RequestMade(
+    //     {
+    //       filter: {
+    //         myIndexedParam: [20, 21],
+    //         myOtherIndexedParam: "0x123456789...",
+    //       }, // Using an array means OR: e.g. 20 or 23
+    //       fromBlock: 0,
+    //     },
+    //     function () {}
+    //   )
+    //   .on("data", function (event) {})
+    //   .on("changed", function (event) {
+    //     // remove event from local database
+    //   })
+    //   .on("error", console.error);
     transaction(walletAddress, accountResponse, "0.0000362");
   } catch (error) {
     console.error("Error calling accountContract method:", error);
@@ -401,3 +379,25 @@ function transaction(from, to, amount) {
 function getContract(abi, address) {
   return new web3.eth.Contract(JSON.parse(JSON.stringify(abi)), address);
 }
+
+serviceContract.events
+  .RequestMade(
+    {
+      fromBlock: 0,
+      toBlock: "latest",
+    },
+    function (error, event) {
+      console.log(event);
+    }
+  )
+  .on("data", function (event) {
+    if (event.returnValues.requestType === "Reservation")
+      reservationCode = event.returnValues.result;
+    else {
+      accountResponse = event.returnValues.result;
+    }
+    console.log(reservationCode);
+    console.log(accountAddress);
+  })
+  .on("changed", function (event) {})
+  .on("error", console.error);
