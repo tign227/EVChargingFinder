@@ -42,9 +42,10 @@ locateCurrentPosition()
       },
     });
     var currPos = { lat: currLoc[1], lng: currLoc[0] };
-    var marker = new tt.Marker().setLngLat(currPos);
-    marker.addTo(map);
-    var popup = new tt.Popup({ anchor: "top" }).setText("You are here");
+    var marker = new tt.Marker().setLngLat(currPos).addTo(map);
+    var popup = new tt.Popup({ anchor: "top", closeButton: false }).setText(
+      "You"
+    );
     marker.setPopup(popup).togglePopup();
   })
   .then(() => {
@@ -57,32 +58,26 @@ locateCurrentPosition()
         minDistance = currDistance;
         minPosition = i;
       }
-      currStation = [stations[i].lng, stations[i].lat];
-      marker = new tt.Marker().setLngLat(currStation).addTo(map);
-      var popup = new tt.Popup({ anchor: "top" }).setText(stations[i].name);
-      marker.setPopup(popup).togglePopup();
+      currStation = { lat: stations[i].lat, lng: stations[i].lng };
+      let marker = new tt.Marker({ interactive: true })
+        .setLngLat(currStation)
+        .addTo(map);
+      let popup = new tt.Popup({ anchor: "top", closeButton: false }).setText(
+        stations[i].name
+      );
+
+      popup.on("open", (event) => {
+        document.getElementById("popup").innerHTML = popup._content.innerText;
+        console.log(popup._content.innerText);
+      });
+      marker.setPopup(popup);
     }
 
     document.getElementById("station").innerHTML =
       " " + stations[minPosition].name;
   })
-  .then(() => {
-    var stationPos = {
-      lat: stations[minPosition].lat,
-      lng: stations[minPosition].lng,
-    };
+  .then(() => {});
 
-    marker = new tt.Marker().setLngLat(stationPos).addTo(map);
-    var popup = new tt.Popup({ anchor: "top" }).setText(
-      stations[minPosition].name
-    );
-    marker.setPopup(popup).togglePopup();
-  })
-  .then(() => {
-    marker.on("click", function (event) {
-      console.log(event);
-    });
-  });
 // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [
   {

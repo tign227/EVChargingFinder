@@ -104,8 +104,14 @@ header {
   margin-top: 2%;
 }
 
+#submit {
+  color: #ededed;
+  margin-top: 3%;
+}
+
 #loc,
-#ev {
+#ev,
+#selected {
   font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
     "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
     color: #000000;
