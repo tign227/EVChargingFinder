@@ -68,12 +68,14 @@ locateCurrentPosition()
 
       popup.on("open", (event) => {
         document.getElementById("popup").innerHTML = popup._content.innerText;
-        console.log(popup._content.innerText);
       });
       marker.setPopup(popup);
     }
 
     document.getElementById("station").innerHTML =
+      " " + stations[minPosition].name;
+
+    document.getElementById("popup").innerHTML =
       " " + stations[minPosition].name;
   })
   .then(() => {});

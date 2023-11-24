@@ -288,6 +288,7 @@ let accountResponse;
 let walletAddress;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const submit = document.getElementById("submit");
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
     document
@@ -298,6 +299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const accounts = await web3.eth.getAccounts();
           walletAddress = accounts[0];
           document.getElementById("connectWalletBtn").innerText = walletAddress;
+          submit.classList.remove("hidden");
         } catch (error) {
           console.error("Error connecting to wallet:", error);
         }
