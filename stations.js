@@ -16,19 +16,6 @@ const locateCurrentPosition = () =>
     );
   });
 
-const addListener = (element, from, to, amount, url, path) => {
-  document.getElementById(element).addEventListener("click", async () => {
-    try {
-      if (walletAddress === null) return;
-      await reservationContract.methods.makeReservation(url, path).call();
-      console.log(walletAddress);
-      transaction(from, to, amount);
-    } catch (error) {
-      console.error("Error calling reservationContract method:", error);
-    }
-  });
-};
-
 locateCurrentPosition().then((position) => {
   document.getElementById("location").innerHTML =
     currLoc[1] + " N, " + currLoc[0] + " E";
@@ -85,40 +72,120 @@ locateCurrentPosition()
         .setHTML(
           "<p>" +
             name +
-            '</p><button id="Reservation">Reservation</button><button id="pay">Pay Now</button>'
+            '</p><button id="reservation">Reservation</button><button id="pay">Pay Now</button>'
         );
       popup.on("open", (event) => {
-        // document.getElementById("popup").innerHTML = popup._content.innerText;
-        // addListener = (element, from, to, amount, url, path)
         const reservationUrl = "http://endpoint-dun.vercel.app/api/reservation";
         const reservationPath = "message,reservationCode";
-        addListener(
-          "Reservation",
-          walletAddress,
-          accountResponse,
-          "0.000001",
-          reservationUrl,
-          reservationPath
-        );
+        document
+          .getElementById("reservation")
+          .addEventListener("click", async () => {
+            try {
+              if (!hasConnectToWallet()) {
+                Swal.fire({
+                  title: "Warning!",
+                  text: "Please connect to your wallet",
+                  icon: "warning",
+                  confirmButtonText: "OK",
+                });
+                return;
+              }
+              await reservationContract.methods
+                .makeReservation(reservationUrl, reservationPath)
+                .call();
+              const availables = {
+                "2023-12-05": "09:00 AM - 12:00 PM",
+                "2023-12-06": "02:00 PM - 05:00 PM",
+                "2023-12-07": "10:30 AM - 01:30 PM",
+              };
 
-        const paymentUrl = "http://endpoint-dun.vercel.app/api/reservation";
-        const paymentPath = "message,reservationCode";
-        addListener(
-          "pay",
-          walletAddress,
-          accountResponse,
-          "0.003",
-          paymentUrl,
-          paymentPath
-        );
+              Swal.fire({
+                title: "Select Reservation Time",
+                input: "select",
+                inputOptions: availables,
+                inputPlaceholder: "Select Reservation Time",
+                showCancelButton: true,
+                confirmButtonText: "Submit",
+                allowOutsideClick: () => !Swal.isLoading(),
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  const selectedOption = availables[result.value];
+                  Swal.fire({
+                    title: `Reservation Time: \n${selectedOption}`,
+                  });
+                  console.log(walletAddress);
+                  transaction(walletAddress, accountResponse, "0.0001");
+                }
+              });
+            } catch (error) {
+              console.error("Error calling reservationContract method:", error);
+            }
+          });
+
+        const paymentUrl = "http://endpoint-dun.vercel.app/api/account";
+        const paymentPath = "message,account";
+        document.getElementById("pay").addEventListener("click", async () => {
+          try {
+            if (!hasConnectToWallet()) {
+              Swal.fire({
+                title: "Warning!",
+                text: "Please connect to your wallet",
+                icon: "warning",
+                confirmButtonText: "OK",
+              });
+              return;
+            }
+            await accountContract.methods
+              .requestAccount(paymentUrl, paymentPath)
+              .call();
+
+            // Example with input
+            // Example with an input field
+            Swal.fire({
+              title: "Input Amount",
+              input: "text",
+              inputPlaceholder: "Integer without decimal only",
+              showCancelButton: true,
+              confirmButtonText: "Submit",
+              cancelButtonText: "Cancel",
+              showLoaderOnConfirm: true,
+              preConfirm: (value) => {
+                // Handle the submitted value (e.g., send it to the server)
+                return new Promise((resolve) => {
+                  // Simulate an asynchronous request
+                  setTimeout(() => {
+                    if (
+                      !Number.isInteger(parseInt(value)) ||
+                      String(value).includes(".")
+                    ) {
+                      // Reject with an error message
+                      Swal.showValidationMessage(
+                        "Total amount is only integer"
+                      );
+                    }
+                    resolve(value);
+                  }, 300);
+                });
+              },
+              allowOutsideClick: () => !Swal.isLoading(),
+            }).then((result) => {
+              if (result.isConfirmed) {
+                // Handle the confirmed value
+                Swal.fire("Toal amount: " + result.value);
+                transaction(walletAddress, accountResponse, result.value);
+              }
+            });
+          } catch (error) {
+            console.error("Error calling accountRequest method:", error);
+          }
+        });
       });
       marker.setPopup(popup);
     }
 
     document.getElementById("station").innerHTML =
       " " + stations[minPosition].name;
-  })
-  .then(() => {});
+  });
 
 // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [

@@ -127,3 +127,7 @@ header {
   border: transparent;
 }
 
+  /* Custom CSS to change background color */
+  .swal2-popup {
+    background-color: #fdfdfb; 
+  }

@@ -287,6 +287,32 @@ let reservationCode;
 let accountResponse;
 let walletAddress;
 
+function hasConnectToWallet() {
+  return walletAddress;
+}
+
+serviceContract.events
+  .RequestMade(
+    {
+      fromBlock: 0,
+      toBlock: "latest",
+    },
+    function (error, event) {
+      console.log(event);
+    }
+  )
+  .on("data", function (event) {
+    if (event.returnValues.requestType === "Reservation")
+      reservationCode = event.returnValues.result;
+    else {
+      accountResponse = event.returnValues.result;
+    }
+    console.log(reservationCode);
+    console.log(accountAddress);
+  })
+  .on("changed", function (event) {})
+  .on("error", console.error);
+
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
@@ -339,25 +365,3 @@ function transaction(from, to, amount) {
 function getContract(abi, address) {
   return new web3.eth.Contract(JSON.parse(JSON.stringify(abi)), address);
 }
-
-serviceContract.events
-  .RequestMade(
-    {
-      fromBlock: 0,
-      toBlock: "latest",
-    },
-    function (error, event) {
-      console.log(event);
-    }
-  )
-  .on("data", function (event) {
-    if (event.returnValues.requestType === "Reservation")
-      reservationCode = event.returnValues.result;
-    else {
-      accountResponse = event.returnValues.result;
-    }
-    console.log(reservationCode);
-    console.log(accountAddress);
-  })
-  .on("changed", function (event) {})
-  .on("error", console.error);
