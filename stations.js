@@ -16,6 +16,19 @@ const locateCurrentPosition = () =>
     );
   });
 
+const addListener = (element, from, to, amount, url, path) => {
+  document.getElementById(element).addEventListener("click", async () => {
+    try {
+      if (walletAddress === null) return;
+      await reservationContract.methods.makeReservation(url, path).call();
+      console.log(walletAddress);
+      transaction(from, to, amount);
+    } catch (error) {
+      console.error("Error calling reservationContract method:", error);
+    }
+  });
+};
+
 locateCurrentPosition().then((position) => {
   document.getElementById("location").innerHTML =
     currLoc[1] + " N, " + currLoc[0] + " E";
@@ -59,23 +72,50 @@ locateCurrentPosition()
         minPosition = i;
       }
       currStation = { lat: stations[i].lat, lng: stations[i].lng };
+      let name = stations[i].name;
       let marker = new tt.Marker({ interactive: true })
         .setLngLat(currStation)
         .addTo(map);
-      let popup = new tt.Popup({ anchor: "top", closeButton: false }).setText(
-        stations[i].name
-      );
-
+      let popup = new tt.Popup({
+        anchor: "top",
+        closeButton: true,
+        interactive: true,
+      })
+        .setText(stations[i].name)
+        .setHTML(
+          "<p>" +
+            name +
+            '</p><button id="Reservation">Reservation</button><button id="pay">Pay Now</button>'
+        );
       popup.on("open", (event) => {
-        document.getElementById("popup").innerHTML = popup._content.innerText;
+        // document.getElementById("popup").innerHTML = popup._content.innerText;
+        // addListener = (element, from, to, amount, url, path)
+        const reservationUrl = "http://endpoint-dun.vercel.app/api/reservation";
+        const reservationPath = "message,reservationCode";
+        addListener(
+          "Reservation",
+          walletAddress,
+          accountResponse,
+          "0.000001",
+          reservationUrl,
+          reservationPath
+        );
+
+        const paymentUrl = "http://endpoint-dun.vercel.app/api/reservation";
+        const paymentPath = "message,reservationCode";
+        addListener(
+          "pay",
+          walletAddress,
+          accountResponse,
+          "0.003",
+          paymentUrl,
+          paymentPath
+        );
       });
       marker.setPopup(popup);
     }
 
     document.getElementById("station").innerHTML =
-      " " + stations[minPosition].name;
-
-    document.getElementById("popup").innerHTML =
       " " + stations[minPosition].name;
   })
   .then(() => {});

@@ -288,7 +288,6 @@ let accountResponse;
 let walletAddress;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const submit = document.getElementById("submit");
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
     document
@@ -299,53 +298,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           const accounts = await web3.eth.getAccounts();
           walletAddress = accounts[0];
           document.getElementById("connectWalletBtn").innerText = walletAddress;
-          submit.classList.remove("hidden");
         } catch (error) {
           console.error("Error connecting to wallet:", error);
         }
       });
   } else {
     console.error("MetaMask is not installed");
-  }
-});
-
-document.getElementById("reservation").addEventListener("click", async () => {
-  try {
-    if (walletAddress === null) return;
-    const url = "http://endpoint-dun.vercel.app/api/reservation";
-    const path = "message,reservationCode";
-    await reservationContract.methods.makeReservation(url, path).call();
-    transaction(walletAddress, accountResponse, "0.0000000001");
-  } catch (error) {
-    console.error("Error calling reservationContract method:", error);
-  }
-});
-
-document.getElementById("pay").addEventListener("click", async () => {
-  try {
-    if (walletAddress === null) return;
-    const url = "http://endpoint-dun.vercel.app/api/account";
-    const path = "message,account";
-    await accountContract.methods.requestAccount(url, path).call();
-    // serviceContract.events
-    //   .RequestMade(
-    //     {
-    //       filter: {
-    //         myIndexedParam: [20, 21],
-    //         myOtherIndexedParam: "0x123456789...",
-    //       }, // Using an array means OR: e.g. 20 or 23
-    //       fromBlock: 0,
-    //     },
-    //     function () {}
-    //   )
-    //   .on("data", function (event) {})
-    //   .on("changed", function (event) {
-    //     // remove event from local database
-    //   })
-    //   .on("error", console.error);
-    transaction(walletAddress, accountResponse, "0.0000362");
-  } catch (error) {
-    console.error("Error calling accountContract method:", error);
   }
 });
 
