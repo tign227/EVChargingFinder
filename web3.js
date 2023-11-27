@@ -4,15 +4,15 @@ const web3 = new Web3(
   )
 );
 
-const reservationAddress = "0x84bB344DD2D46eB3258dbE30fD253dAD40e9d4e1";
-const serviceAddress = "0xfc7B0311E6d858B6014cdbdC39dB7f9f1c6C95B3";
-const accountAddress = "0x9B4E3318d94425d4c1f9E36A34aeE26219B44536";
+const reservationAddress = "0xA4d6D64E72088248Da7a7229591760D33Fb09632";
+const serviceAddress = "0xdC211bD05a035D2dcFB4D9628589d191c513E91F";
+const accountAddress = "0xb5232d97ee8D4fC68dEd25358b06c9e98D1B6649";
 const accountABI = [
   {
     inputs: [
       {
         internalType: "address",
-        name: "serviceAddress",
+        name: "_serviceAddress",
         type: "address",
       },
     ],
@@ -20,21 +20,121 @@ const accountABI = [
     type: "constructor",
   },
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
+    name: "AccountRequestCanceled",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
+    name: "AccountRequestCreated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "string",
+        name: "_errorMessage",
+        type: "string",
+      },
+    ],
+    name: "ErrorOccurred",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
+    name: "cancelRequest",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "string",
-        name: "url",
+        name: "_url",
         type: "string",
       },
       {
         internalType: "string",
-        name: "path",
+        name: "_path",
         type: "string",
       },
     ],
     name: "requestAccount",
-    outputs: [],
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "requestsOfUser",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
 ];
@@ -43,7 +143,7 @@ const reservationABI = [
     inputs: [
       {
         internalType: "address",
-        name: "serviceAddress",
+        name: "_serviceAddress",
         type: "address",
       },
     ],
@@ -51,21 +151,134 @@ const reservationABI = [
     type: "constructor",
   },
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "string",
+        name: "_errorMessage",
+        type: "string",
+      },
+    ],
+    name: "ErrorOccurred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "_reservationId",
+        type: "bytes32",
+      },
+    ],
+    name: "ReservationCanceled",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "_reservationId",
+        type: "bytes32",
+      },
+    ],
+    name: "ReservationCreated",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_reservationId",
+        type: "bytes32",
+      },
+    ],
+    name: "cancelReservation",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "string",
-        name: "url",
+        name: "_url",
         type: "string",
       },
       {
         internalType: "string",
-        name: "path",
+        name: "_path",
         type: "string",
       },
     ],
     name: "makeReservation",
-    outputs: [],
-    stateMutability: "payable",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_reservationId",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "reservationsOfUser",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "service",
+    outputs: [
+      {
+        internalType: "contract FunctionsService",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
 ];
@@ -158,19 +371,57 @@ const serviceABI = [
       {
         indexed: true,
         internalType: "bytes32",
-        name: "requestId",
+        name: "_requestId",
         type: "bytes32",
       },
       {
         indexed: false,
         internalType: "string",
-        name: "requestType",
+        name: "_requestType",
+        type: "string",
+      },
+    ],
+    name: "RequestCanceled",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "_requestType",
         type: "string",
       },
       {
         indexed: false,
         internalType: "string",
-        name: "result",
+        name: "_result",
+        type: "string",
+      },
+    ],
+    name: "RequestCompleted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "_requestType",
         type: "string",
       },
     ],
@@ -180,6 +431,19 @@ const serviceABI = [
   {
     inputs: [],
     name: "acceptOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
+    name: "cancelRequest",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -219,6 +483,48 @@ const serviceABI = [
     inputs: [
       {
         internalType: "string",
+        name: "_requestType",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_url",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_path",
+        type: "string",
+      },
+    ],
+    name: "request",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_requestId",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    name: "requestRecords",
+    outputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "string",
         name: "requestType",
         type: "string",
       },
@@ -232,25 +538,14 @@ const serviceABI = [
         name: "path",
         type: "string",
       },
-    ],
-    name: "request",
-    outputs: [
       {
-        internalType: "bytes32",
-        name: "requestId",
-        type: "bytes32",
+        internalType: "enum FunctionsService.RequestStatus",
+        name: "status",
+        type: "uint8",
       },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "result",
-    outputs: [
       {
         internalType: "string",
-        name: "",
+        name: "result",
         type: "string",
       },
     ],
@@ -266,13 +561,6 @@ const serviceABI = [
       },
     ],
     name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdrawLink",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
