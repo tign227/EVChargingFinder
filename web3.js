@@ -579,27 +579,45 @@ function hasConnectToWallet() {
   return walletAddress;
 }
 
-serviceContract.events
-  .RequestMade(
-    {
-      fromBlock: 0,
-      toBlock: "latest",
-    },
-    function (error, event) {
-      console.log(event);
-    }
-  )
-  .on("data", function (event) {
-    if (event.returnValues.requestType === "Reservation")
-      reservationCode = event.returnValues.result;
-    else {
-      accountResponse = event.returnValues.result;
-    }
-    console.log(reservationCode);
-    console.log(accountAddress);
-  })
-  .on("changed", function (event) {})
-  .on("error", console.error);
+// const eventCallback = (error, event) => {
+//   if (!error) {
+//     // 处理事件数据
+//     console.log("Event data:", event.returnValues);
+//   } else {
+//     console.error("Error in event callback:", error);
+//   }
+// };
+
+// serviceContract.events
+//   .RequestCompleted()
+//   .on("data", eventCallback)
+//   .on("changed", eventCallback)
+//   .on("error", console.error);
+
+// let myEvent = serviceContract.events.RequestCompleted();
+
+// myEvent
+//   .on("data", (event) => {
+//     console.log(event.returnValues);
+//   })
+//   .on("error", console.error);
+
+// web3.eth.subscribe(
+//   "RequestCompleted",
+//   { address: walletAddress },
+//   (error, log) => {
+//     if (!error) {
+//       console.log(log);
+//     }
+//   }
+// );
+
+// web3.eth.subscribe("logs", (error, log) => {
+//   if (!error) {
+//     console.log(log);
+//   }
+// });
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {

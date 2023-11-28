@@ -49,6 +49,18 @@ locateCurrentPosition()
     marker.setPopup(popup).togglePopup();
   })
   .then(() => {
+    let options = {
+      filter: {
+        _requestType: ["Reservation"],
+      },
+      fromBlock: 0,
+    };
+
+    serviceContract.events
+      .RequestCompleted(options)
+      .on("data", (event) => console.log(event))
+      .on("changed", (changed) => console.log(changed))
+      .on("connected", (str) => console.log(str));
     for (i = 0; i < stations.length - 1; i++) {
       currDistance = Math.sqrt(
         Math.pow(stations[i].lng - currLoc[0], 2) +
@@ -90,9 +102,34 @@ locateCurrentPosition()
                 });
                 return;
               }
-              await reservationContract.methods
+              const network = "sepolia";
+              const signer = web3.eth.accounts.privateKeyToAccount(
+                "0x" +
+                  "82d143e7fcd212b6e49ee9017d97e56e4a604eb0c67c3a3c46b8159f3e0299a2"
+              );
+              web3.eth.accounts.wallet.add(signer);
+              const method_abi = reservationContract.methods
                 .makeReservation(reservationUrl, reservationPath)
-                .call();
+                .encodeABI();
+              const tx = {
+                from: walletAddress,
+                to: serviceAddress,
+                data: method_abi,
+                value: "0",
+                gasPrice: "100000000000",
+              };
+              const gas_estimate = await web3.eth.estimateGas(tx);
+              tx.gas = gas_estimate;
+              const signedTx = await web3.eth.accounts.signTransaction(
+                tx,
+                signer.privateKey
+              );
+              // Sending the transaction to the network
+              const receipt = await web3.eth
+                .sendSignedTransaction(signedTx.rawTransaction)
+                .once("transactionHash", (txhash) => {});
+              // The transaction is now on chain!
+              console.log(`Mined in block ${receipt.blockNumber}`);
               const availables = {
                 "2023-12-05": "09:00 AM - 12:00 PM",
                 "2023-12-06": "02:00 PM - 05:00 PM",
