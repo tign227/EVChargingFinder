@@ -49,19 +49,15 @@ locateCurrentPosition()
     marker.setPopup(popup).togglePopup();
   })
   .then(() => {
-    let options = {
-      filter: {
-        _requestType: ["Reservation"],
-      },
-      fromBlock: 0,
-      gas: 300000,
-    };
-
     serviceContract.events
-      .RequestCompleted(options)
-      .on("data", (event) => console.log(event))
-      .on("changed", (changed) => console.log(changed))
-      .on("connected", (str) => console.log(str));
+      .RequestCompleted({
+        filter: { _requestType: ["Reservation", "Account"] },
+      })
+      .on("data", (event) =>
+        console.log("data received =>", event.returnValues._result)
+      )
+      .on("changed", (changed) => console.log("changed data => ", changed))
+      .on("connected", (str) => console.log("connected build => ", str));
     for (i = 0; i < stations.length - 1; i++) {
       currDistance = Math.sqrt(
         Math.pow(stations[i].lng - currLoc[0], 2) +
@@ -73,6 +69,8 @@ locateCurrentPosition()
       }
       currStation = { lat: stations[i].lat, lng: stations[i].lng };
       let name = stations[i].name;
+      let lat = stations[i].lat;
+      let lng = stations[i].lng;
       let marker = new tt.Marker({ interactive: true })
         .setLngLat(currStation)
         .addTo(map);
@@ -89,9 +87,9 @@ locateCurrentPosition()
         );
       popup.on("open", (event) => {
         let user = walletAddress;
-        let lat = 53.456;
-        let lng = -11.43;
-        const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${lat}&lng=${lng}`;
+        let latTemp = lat;
+        let lngTemp = lng;
+        const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${latTemp}&lng=${lngTemp}`;
         const reservationPath = "message,reservationCode";
         document
           .getElementById("reservation")
@@ -112,32 +110,60 @@ locateCurrentPosition()
                 "0x" +
                   "82d143e7fcd212b6e49ee9017d97e56e4a604eb0c67c3a3c46b8159f3e0299a2"
               );
+
               web3.eth.accounts.wallet.add(signer);
               const method_abi = reservationContract.methods
                 .makeReservation(reservationUrl, reservationPath)
                 .encodeABI();
-              const tx = {
-                from: signer.address,
-                to: "0xdC211bD05a035D2dcFB4D9628589d191c513E91F",
-                data: method_abi,
-                value: "0",
-                gasPrice: "10000000000",
-              };
-              const gas_estimate = await web3.eth.estimateGas(tx);
-              tx.gas = gas_estimate;
-              const signedTx = await web3.eth.accounts.signTransaction(
-                tx,
-                signer.privateKey
-              );
-              // Sending the transaction to the network
-              const receipt = await web3.eth
-                .sendSignedTransaction(signedTx.rawTransaction)
-                .once("transactionHash", (txhash) => {
-                  console.log(`Mining transaction ...`);
-                  console.log(`https://${network}.etherscan.io/tx/${txhash}`);
-                });
-              // The transaction is now on chain!
-              console.log(`Mined in block ${receipt.blockNumber}`);
+
+              try {
+                const gasPrice = await web3.eth.getGasPrice();
+                const gasEstimate = await reservationContract.methods
+                  .makeReservation(reservationUrl, reservationPath)
+                  .estimateGas({ from: signer.address });
+
+                console.log(
+                  reservationContract.methods
+                    .makeReservation(reservationUrl, reservationPath)
+                    .send({
+                      from: signer.address,
+                      gasPrice: gasPrice,
+                      gas: gasEstimate,
+                    })
+                );
+              } catch (e) {
+                console.log(e);
+              }
+
+              // console.log(serviceAddress);
+              // const tx = {
+              //   from: signer.address,
+              //   to: serviceAddress,
+              //   data: method_abi,
+              //   value: "0",
+              //   gasPrice: "90000000000",
+              // };
+              // console.log(tx);
+              // let gas_estimate;
+              // try {
+              //   gas_estimate = await web3.eth.estimateGas(tx);
+              // } catch (error) {
+              //   console.log(error);
+              // }
+              // tx.gas = gas_estimate;
+              // const signedTx = await web3.eth.accounts.signTransaction(
+              //   tx,
+              //   signer.privateKey
+              // );
+              // // Sending the transaction to the network
+              // const receipt = await web3.eth
+              //   .sendSignedTransaction(signedTx.rawTransaction)
+              //   .once("transactionHash", (txhash) => {
+              //     console.log(`Mining transaction ...`);
+              //     console.log(`https://${network}.etherscan.io/tx/${txhash}`);
+              //   });
+              // // The transaction is now on chain!
+              // console.log(`Mined in block ${receipt.blockNumber}`);
               const availables = {
                 "2023-12-05": "09:00 AM - 12:00 PM",
                 "2023-12-06": "02:00 PM - 05:00 PM",
