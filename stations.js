@@ -54,6 +54,7 @@ locateCurrentPosition()
         _requestType: ["Reservation"],
       },
       fromBlock: 0,
+      gas: 300000,
     };
 
     serviceContract.events
@@ -87,7 +88,10 @@ locateCurrentPosition()
             '</p><button id="reservation">Reservation</button><button id="pay">Pay Now</button>'
         );
       popup.on("open", (event) => {
-        const reservationUrl = "http://endpoint-dun.vercel.app/api/reservation";
+        let user = walletAddress;
+        let lat = 53.456;
+        let lng = -11.43;
+        const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${lat}&lng=${lng}`;
         const reservationPath = "message,reservationCode";
         document
           .getElementById("reservation")
@@ -102,6 +106,7 @@ locateCurrentPosition()
                 });
                 return;
               }
+
               const network = "sepolia";
               const signer = web3.eth.accounts.privateKeyToAccount(
                 "0x" +
@@ -112,11 +117,11 @@ locateCurrentPosition()
                 .makeReservation(reservationUrl, reservationPath)
                 .encodeABI();
               const tx = {
-                from: walletAddress,
-                to: serviceAddress,
+                from: signer.address,
+                to: "0xdC211bD05a035D2dcFB4D9628589d191c513E91F",
                 data: method_abi,
                 value: "0",
-                gasPrice: "100000000000",
+                gasPrice: "10000000000",
               };
               const gas_estimate = await web3.eth.estimateGas(tx);
               tx.gas = gas_estimate;
@@ -127,7 +132,10 @@ locateCurrentPosition()
               // Sending the transaction to the network
               const receipt = await web3.eth
                 .sendSignedTransaction(signedTx.rawTransaction)
-                .once("transactionHash", (txhash) => {});
+                .once("transactionHash", (txhash) => {
+                  console.log(`Mining transaction ...`);
+                  console.log(`https://${network}.etherscan.io/tx/${txhash}`);
+                });
               // The transaction is now on chain!
               console.log(`Mined in block ${receipt.blockNumber}`);
               const availables = {

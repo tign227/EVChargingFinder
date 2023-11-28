@@ -618,7 +618,6 @@ function hasConnectToWallet() {
 //   }
 // });
 
-
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
