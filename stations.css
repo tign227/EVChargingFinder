@@ -50,7 +50,12 @@ li {
   cursor: pointer;
   float: right;
   border-radius: 10px;
-  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 200px; 
+  max-width: 200px;
 }
 
 .float-right {
@@ -134,12 +139,13 @@ header {
 
   /* 自定义弹窗容器样式 */
 .reservation-container {
-  width: 400px; /* 调整弹窗的宽度 */
+  width: 500px; /* 调整弹窗的宽度 */
+
 }
 
 /* 自定义弹窗内容样式 */
 .reservation-popup {
-  font-size: 16px; /* 调整文本的字体大小 */
+  font-size: 12px; /* 调整文本的字体大小 */
   line-height: 1.5; /* 调整文本的行高 */
 }
 

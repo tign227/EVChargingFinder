@@ -73,11 +73,11 @@ locateCurrentPosition()
               "<p>Reservation Code: " +
               reservationCode +
               "</p>" +
-              "<p>Station formation:\n name: " +
+              "<p>Station Information:<br>station name: " +
               stationName +
-              " \n lat: " +
+              "<br>latitude: " +
               latTemp +
-              "\n lng: " +
+              "<br>longitude: " +
               lngTemp +
               "</p>" +
               "</div>",
@@ -85,7 +85,7 @@ locateCurrentPosition()
               popup: "reservation-popup-container", // 弹窗容器的样式
             },
             confirmButtonText: "Confirm",
-            cancelButtonText: "Cancel",
+            showConfirmButton: true,
           });
         } else {
           console.log("account data received =>", event.returnValues._result);
@@ -118,7 +118,7 @@ locateCurrentPosition()
         .setText(stations[i].name)
         .setHTML(
           "<p>" +
-            name +
+            stationName +
             '</p><button id="reservation">Reservation</button><button id="pay">Pay Now</button>'
         );
       popup.on("open", (event) => {
@@ -156,10 +156,6 @@ locateCurrentPosition()
                 .makeReservation(reservationUrl, reservationPath)
                 .estimateGas({ from: walletAddress });
 
-              const gasEstimate2 = await accountContract.methods
-                .requestAccount(paymentUrl, paymentPath)
-                .estimateGas({ from: walletAddress });
-
               Swal.fire({
                 title: "Select Reservation Time",
                 input: "select",
@@ -179,9 +175,6 @@ locateCurrentPosition()
                         .makeReservation(reservationUrl, reservationPath)
                         .encodeABI();
 
-                      const methodAbi2 = accountContract.methods
-                        .requestAccount(paymentUrl, paymentPath)
-                        .encodeABI();
                       //reservation
                       web3.eth
                         .sendTransaction({
@@ -190,21 +183,6 @@ locateCurrentPosition()
                           data: methodAbi,
                           gas: gasEstimate,
                           gasPrice: gasPrice,
-                        })
-                        .then((receipt) => {
-                          console.log("Transaction receipt:", receipt);
-                        })
-                        .catch((error) => {
-                          console.error("Error sending transaction:", error);
-                        });
-                      //payment accout address
-                      web3.eth
-                        .sendTransaction({
-                          from: defaultAccount,
-                          to: accountAddress,
-                          data: methodAbi2,
-                          gasPrice: gasEstimate2,
-                          gas: gasPrice,
                         })
                         .then((receipt) => {
                           console.log("Transaction receipt:", receipt);
@@ -273,6 +251,11 @@ locateCurrentPosition()
               if (result.isConfirmed) {
                 // Handle the confirmed value
                 Swal.fire("Toal amount: " + result.value);
+                transaction(
+                  walletAddress,
+                  "0x5477cE555Ffae19D38c58575403f00BF6fD05ed3",
+                  result.value
+                );
               }
             });
           } catch (error) {
