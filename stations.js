@@ -53,9 +53,40 @@ locateCurrentPosition()
       .RequestCompleted({
         filter: { _requestType: ["Reservation", "Account"] },
       })
-      .on("data", (event) =>
-        console.log("data received =>", event.returnValues._result)
-      )
+      .on("data", (event) => {
+        console.log("data received =>", event.returnValues._result);
+        if (event.returnValues._requestType === "Reservation") {
+          reservationCode = event.returnValues._result;
+          Swal.fire({
+            title: `Reservation Time: \n${selectedOption} \n Reservation Code: \n${reservationCode} \n Station formation: \n${stationName} ${latTemp} ${lngTemp}`,
+          });
+          Swal.fire({
+            title: "Reservation Information",
+            html:
+              '<div class="reservation-popup">' +
+              "<p>Reservation Time:" +
+              selectedOption +
+              "</p>" +
+              "<p>Reservation Code: " +
+              reservationCode +
+              "</p>" +
+              "<p>Station formation:\n name: " +
+              stationName +
+              " \n lat: " +
+              latTemp +
+              "\n lng: " +
+              lngTemp +
+              "</p>" +
+              "</div>",
+            customClass: {
+              popup: "reservation-popup-container", // 弹窗容器的样式
+            },
+            showConfirmButton: false, // 隐藏确认按钮
+          });
+        } else {
+          accountResponse = event.returnValues._result;
+        }
+      })
       .on("changed", (changed) => console.log("changed data => ", changed))
       .on("connected", (str) => console.log("connected build => ", str));
     for (i = 0; i < stations.length - 1; i++) {
@@ -68,7 +99,7 @@ locateCurrentPosition()
         minPosition = i;
       }
       currStation = { lat: stations[i].lat, lng: stations[i].lng };
-      let name = stations[i].name;
+      stationName = stations[i].name;
       let lat = stations[i].lat;
       let lng = stations[i].lng;
       let marker = new tt.Marker({ interactive: true })
@@ -87,8 +118,8 @@ locateCurrentPosition()
         );
       popup.on("open", (event) => {
         let user = walletAddress;
-        let latTemp = lat;
-        let lngTemp = lng;
+        latTemp = lat;
+        lngTemp = lng;
         const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${latTemp}&lng=${lngTemp}`;
         const reservationPath = "message,reservationCode";
         document
@@ -105,112 +136,17 @@ locateCurrentPosition()
                 return;
               }
 
-              // 通过 Metamask 连接到以太坊网络
-              const web3 = new Web3(window.ethereum);
-              window.ethereum
-                .enable()
-                .then(function (accounts) {
-                  const defaultAccount = accounts[0];
-
-                  const methodAbi = reservationContract.methods
-                    .makeReservation(reservationUrl, reservationPath)
-                    .encodeABI();
-
-                  web3.eth
-                    .sendTransaction({
-                      from: defaultAccount,
-                      to: reservationAddress,
-                      data: methodAbi,
-                    })
-                    .then((receipt) => {
-                      console.log("Transaction receipt:", receipt);
-                    })
-                    .catch((error) => {
-                      console.error("Error sending transaction:", error);
-                    });
-                })
-                .catch(function (error) {
-                  // 用户拒绝了连接到以太坊网络的授权请求
-                  console.error("User denied account access");
-                });
-
-              const methodAbi = reservationContract.methods
-                .makeReservation(reservationUrl, reservationPath)
-                .encodeABI();
-              const gasPrice = await web3.eth.getGasPrice();
-              const gasEstimate = await reservationContract.methods
-                .makeReservation(reservationUrl, reservationPath)
-                .estimateGas({ from: walletAddress });
-
-              // // 发送交易
-              // web3.eth
-              //   .sendTransaction({
-              //     from: walletAddress,
-              //     to: reservationAddress,
-              //     data: methodAbi,
-              //     gas: gasEstimate,
-              //     gasPrice: gasPrice,
-              //   })
-              //   .then((receipt) => {
-              //     console.log("Transaction receipt:", receipt);
-              //   })
-              //   .catch((error) => {
-              //     console.error("Error sending transaction:", error);
-              //   });
-
-              // try {
-              //   const gasPrice = await web3.eth.getGasPrice();
-              //   const gasEstimate = await reservationContract.methods
-              //     .makeReservation(reservationUrl, reservationPath)
-              //     .estimateGas({ from: signer.address });
-
-              //   console.log(
-              //     reservationContract.methods
-              //       .makeReservation(reservationUrl, reservationPath)
-              //       .send({
-              //         from: signer.address,
-              //         gasPrice: gasPrice,
-              //         gas: gasEstimate,
-              //       })
-              //   );
-              // } catch (e) {
-              //   console.log(e);
-              // }
-
-              // console.log(serviceAddress);
-              // const tx = {
-              //   from: signer.address,
-              //   to: serviceAddress,
-              //   data: method_abi,
-              //   value: "0",
-              //   gasPrice: "90000000000",
-              // };
-              // console.log(tx);
-              // let gas_estimate;
-              // try {
-              //   gas_estimate = await web3.eth.estimateGas(tx);
-              // } catch (error) {
-              //   console.log(error);
-              // }
-              // tx.gas = gas_estimate;
-              // const signedTx = await web3.eth.accounts.signTransaction(
-              //   tx,
-              //   signer.privateKey
-              // );
-              // // Sending the transaction to the network
-              // const receipt = await web3.eth
-              //   .sendSignedTransaction(signedTx.rawTransaction)
-              //   .once("transactionHash", (txhash) => {
-              //     console.log(`Mining transaction ...`);
-              //     console.log(`https://${network}.etherscan.io/tx/${txhash}`);
-              //   });
-              // // The transaction is now on chain!
-              // console.log(`Mined in block ${receipt.blockNumber}`);
               const availables = {
                 "2023-12-05": "09:00 AM - 12:00 PM",
                 "2023-12-06": "02:00 PM - 05:00 PM",
                 "2023-12-07": "10:30 AM - 01:30 PM",
               };
+              // 通过 Metamask 连接到以太坊网络
+              const web3 = new Web3(window.ethereum);
+              const gasPrice = await web3.eth.getGasPrice();
+              const gasEstimate = await reservationContract.methods
+                .makeReservation(reservationUrl, reservationPath)
+                .estimateGas({ from: walletAddress });
 
               Swal.fire({
                 title: "Select Reservation Time",
@@ -222,12 +158,35 @@ locateCurrentPosition()
                 allowOutsideClick: () => !Swal.isLoading(),
               }).then((result) => {
                 if (result.isConfirmed) {
-                  const selectedOption = availables[result.value];
-                  Swal.fire({
-                    title: `Reservation Time: \n${selectedOption}`,
-                  });
-                  console.log(walletAddress);
-                  // transaction(walletAddress, accountResponse, "0.0001");
+                  window.ethereum
+                    .enable()
+                    .then(function (accounts) {
+                      const defaultAccount = accounts[0];
+
+                      const methodAbi = reservationContract.methods
+                        .makeReservation(reservationUrl, reservationPath)
+                        .encodeABI();
+
+                      web3.eth
+                        .sendTransaction({
+                          from: defaultAccount,
+                          to: reservationAddress,
+                          data: methodAbi,
+                          gas: gasEstimate,
+                          gasPrice: gasPrice,
+                        })
+                        .then((receipt) => {
+                          console.log("Transaction receipt:", receipt);
+                        })
+                        .catch((error) => {
+                          console.error("Error sending transaction:", error);
+                        });
+                    })
+                    .catch(function (error) {
+                      // 用户拒绝了连接到以太坊网络的授权请求
+                      console.error("User denied account access");
+                    });
+                  selectedOption = availables[result.value];
                 }
               });
             } catch (error) {

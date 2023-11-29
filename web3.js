@@ -1,6 +1,6 @@
 const web3 = new Web3(
   new Web3.providers.WebsocketProvider(
-    "wss://eth-sepolia.g.alchemy.com/v2/T8GltN0ck7mm64eVk_4lq7TLpq9Z8gOE"
+    "wss://sepolia.infura.io/ws/v3/18219f234a874bed9cde55db88d2b49b"
   )
 );
 
@@ -574,49 +574,15 @@ const accountContract = getContract(accountABI, accountAddress);
 let reservationCode;
 let accountResponse;
 let walletAddress;
+let selectOption;
+let stationName;
+let latTemp;
+let lngTemp;
 
 function hasConnectToWallet() {
   return walletAddress;
 }
 
-// const eventCallback = (error, event) => {
-//   if (!error) {
-//     // 处理事件数据
-//     console.log("Event data:", event.returnValues);
-//   } else {
-//     console.error("Error in event callback:", error);
-//   }
-// };
-
-// serviceContract.events
-//   .RequestCompleted()
-//   .on("data", eventCallback)
-//   .on("changed", eventCallback)
-//   .on("error", console.error);
-
-// let myEvent = serviceContract.events.RequestCompleted();
-
-// myEvent
-//   .on("data", (event) => {
-//     console.log(event.returnValues);
-//   })
-//   .on("error", console.error);
-
-// web3.eth.subscribe(
-//   "RequestCompleted",
-//   { address: walletAddress },
-//   (error, log) => {
-//     if (!error) {
-//       console.log(log);
-//     }
-//   }
-// );
-
-// web3.eth.subscribe("logs", (error, log) => {
-//   if (!error) {
-//     console.log(log);
-//   }
-// });
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {
