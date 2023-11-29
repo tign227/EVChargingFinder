@@ -54,8 +54,11 @@ locateCurrentPosition()
         filter: { _requestType: ["Reservation", "Account"] },
       })
       .on("data", (event) => {
-        console.log("data received =>", event.returnValues._result);
         if (event.returnValues._requestType === "Reservation") {
+          console.log(
+            "reservation data received =>",
+            event.returnValues._result
+          );
           reservationCode = event.returnValues._result;
           Swal.fire({
             title: `Reservation Time: \n${selectedOption} \n Reservation Code: \n${reservationCode} \n Station formation: \n${stationName} ${latTemp} ${lngTemp}`,
@@ -81,9 +84,11 @@ locateCurrentPosition()
             customClass: {
               popup: "reservation-popup-container", // 弹窗容器的样式
             },
-            showConfirmButton: false, // 隐藏确认按钮
+            confirmButtonText: "Confirm",
+            cancelButtonText: "Cancel",
           });
         } else {
+          console.log("account data received =>", event.returnValues._result);
           accountResponse = event.returnValues._result;
         }
       })
@@ -122,6 +127,9 @@ locateCurrentPosition()
         lngTemp = lng;
         const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${latTemp}&lng=${lngTemp}`;
         const reservationPath = "message,reservationCode";
+
+        const paymentUrl = `http://endpoint-dun.vercel.app/api/account?yser=${user}&name=${stationName}`;
+        const paymentPath = "message,account";
         document
           .getElementById("reservation")
           .addEventListener("click", async () => {
@@ -141,11 +149,15 @@ locateCurrentPosition()
                 "2023-12-06": "02:00 PM - 05:00 PM",
                 "2023-12-07": "10:30 AM - 01:30 PM",
               };
-              // 通过 Metamask 连接到以太坊网络
+
               const web3 = new Web3(window.ethereum);
               const gasPrice = await web3.eth.getGasPrice();
               const gasEstimate = await reservationContract.methods
                 .makeReservation(reservationUrl, reservationPath)
+                .estimateGas({ from: walletAddress });
+
+              const gasEstimate2 = await accountContract.methods
+                .requestAccount(paymentUrl, paymentPath)
                 .estimateGas({ from: walletAddress });
 
               Swal.fire({
@@ -167,6 +179,10 @@ locateCurrentPosition()
                         .makeReservation(reservationUrl, reservationPath)
                         .encodeABI();
 
+                      const methodAbi2 = accountContract.methods
+                        .requestAccount(paymentUrl, paymentPath)
+                        .encodeABI();
+                      //reservation
                       web3.eth
                         .sendTransaction({
                           from: defaultAccount,
@@ -174,6 +190,21 @@ locateCurrentPosition()
                           data: methodAbi,
                           gas: gasEstimate,
                           gasPrice: gasPrice,
+                        })
+                        .then((receipt) => {
+                          console.log("Transaction receipt:", receipt);
+                        })
+                        .catch((error) => {
+                          console.error("Error sending transaction:", error);
+                        });
+                      //payment accout address
+                      web3.eth
+                        .sendTransaction({
+                          from: defaultAccount,
+                          to: accountAddress,
+                          data: methodAbi2,
+                          gasPrice: gasEstimate2,
+                          gas: gasPrice,
                         })
                         .then((receipt) => {
                           console.log("Transaction receipt:", receipt);
@@ -194,8 +225,6 @@ locateCurrentPosition()
             }
           });
 
-        const paymentUrl = "http://endpoint-dun.vercel.app/api/account";
-        const paymentPath = "message,account";
         document.getElementById("pay").addEventListener("click", async () => {
           try {
             if (!hasConnectToWallet()) {
@@ -244,7 +273,6 @@ locateCurrentPosition()
               if (result.isConfirmed) {
                 // Handle the confirmed value
                 Swal.fire("Toal amount: " + result.value);
-                transaction(walletAddress, accountResponse, result.value);
               }
             });
           } catch (error) {
