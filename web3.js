@@ -1,6 +1,6 @@
 const web3 = new Web3(
   new Web3.providers.WebsocketProvider(
-    "wss://sepolia.infura.io/ws/v3/18219f234a874bed9cde55db88d2b49b"
+    "wss://eth-sepolia.g.alchemy.com/v2/T8GltN0ck7mm64eVk_4lq7TLpq9Z8gOE"
   )
 );
 

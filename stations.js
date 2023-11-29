@@ -105,35 +105,77 @@ locateCurrentPosition()
                 return;
               }
 
-              const network = "sepolia";
-              const signer = web3.eth.accounts.privateKeyToAccount(
-                "0x" +
-                  "82d143e7fcd212b6e49ee9017d97e56e4a604eb0c67c3a3c46b8159f3e0299a2"
-              );
+              // 通过 Metamask 连接到以太坊网络
+              const web3 = new Web3(window.ethereum);
+              window.ethereum
+                .enable()
+                .then(function (accounts) {
+                  const defaultAccount = accounts[0];
 
-              web3.eth.accounts.wallet.add(signer);
-              const method_abi = reservationContract.methods
+                  const methodAbi = reservationContract.methods
+                    .makeReservation(reservationUrl, reservationPath)
+                    .encodeABI();
+
+                  web3.eth
+                    .sendTransaction({
+                      from: defaultAccount,
+                      to: reservationAddress,
+                      data: methodAbi,
+                    })
+                    .then((receipt) => {
+                      console.log("Transaction receipt:", receipt);
+                    })
+                    .catch((error) => {
+                      console.error("Error sending transaction:", error);
+                    });
+                })
+                .catch(function (error) {
+                  // 用户拒绝了连接到以太坊网络的授权请求
+                  console.error("User denied account access");
+                });
+
+              const methodAbi = reservationContract.methods
                 .makeReservation(reservationUrl, reservationPath)
                 .encodeABI();
+              const gasPrice = await web3.eth.getGasPrice();
+              const gasEstimate = await reservationContract.methods
+                .makeReservation(reservationUrl, reservationPath)
+                .estimateGas({ from: walletAddress });
 
-              try {
-                const gasPrice = await web3.eth.getGasPrice();
-                const gasEstimate = await reservationContract.methods
-                  .makeReservation(reservationUrl, reservationPath)
-                  .estimateGas({ from: signer.address });
+              // // 发送交易
+              // web3.eth
+              //   .sendTransaction({
+              //     from: walletAddress,
+              //     to: reservationAddress,
+              //     data: methodAbi,
+              //     gas: gasEstimate,
+              //     gasPrice: gasPrice,
+              //   })
+              //   .then((receipt) => {
+              //     console.log("Transaction receipt:", receipt);
+              //   })
+              //   .catch((error) => {
+              //     console.error("Error sending transaction:", error);
+              //   });
 
-                console.log(
-                  reservationContract.methods
-                    .makeReservation(reservationUrl, reservationPath)
-                    .send({
-                      from: signer.address,
-                      gasPrice: gasPrice,
-                      gas: gasEstimate,
-                    })
-                );
-              } catch (e) {
-                console.log(e);
-              }
+              // try {
+              //   const gasPrice = await web3.eth.getGasPrice();
+              //   const gasEstimate = await reservationContract.methods
+              //     .makeReservation(reservationUrl, reservationPath)
+              //     .estimateGas({ from: signer.address });
+
+              //   console.log(
+              //     reservationContract.methods
+              //       .makeReservation(reservationUrl, reservationPath)
+              //       .send({
+              //         from: signer.address,
+              //         gasPrice: gasPrice,
+              //         gas: gasEstimate,
+              //       })
+              //   );
+              // } catch (e) {
+              //   console.log(e);
+              // }
 
               // console.log(serviceAddress);
               // const tx = {
@@ -185,7 +227,7 @@ locateCurrentPosition()
                     title: `Reservation Time: \n${selectedOption}`,
                   });
                   console.log(walletAddress);
-                  transaction(walletAddress, accountResponse, "0.0001");
+                  // transaction(walletAddress, accountResponse, "0.0001");
                 }
               });
             } catch (error) {
