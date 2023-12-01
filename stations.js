@@ -67,10 +67,10 @@ locateCurrentPosition()
             title: "Reservation Information",
             html:
               '<div class="reservation-popup">' +
-              "<p>Reservation Time:" +
+              "<p>Reservation Time:<br>" +
               selectedOption +
               "</p>" +
-              "<p>Reservation Code: " +
+              "<p>Reservation Code: <br>" +
               reservationCode +
               "</p>" +
               "<p>Station Information:<br>station name: " +
@@ -184,12 +184,15 @@ locateCurrentPosition()
                 });
                 return;
               }
+              const today = new Date();
+              const availables = {};
 
-              const availables = {
-                "2023-12-05": "09:00 AM - 12:00 PM",
-                "2023-12-06": "02:00 PM - 05:00 PM",
-                "2023-12-07": "10:30 AM - 01:30 PM",
-              };
+              for (let i = 0; i < 5; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                const dateString = date.toISOString().split("T")[0];
+                availables[dateString] = dateString;
+              }
 
               const web3 = new Web3(window.ethereum);
               const gasPriceForReservation = await web3.eth.getGasPrice();
