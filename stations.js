@@ -82,7 +82,7 @@ locateCurrentPosition()
               "</p>" +
               "</div>",
             customClass: {
-              popup: "reservation-popup-container", // 弹窗容器的样式
+              popup: "reservation-container",
             },
             confirmButtonText: "Confirm",
             showConfirmButton: true,
@@ -90,8 +90,45 @@ locateCurrentPosition()
         } else if (event.returnValues._requestType === "Account") {
           console.log("account data received =>", event.returnValues._result);
           accountResponse = event.returnValues._result;
-          Swal.fire("Toal amount: " + paymentAmount);
-          transaction(walletAddress, accountResponse, paymentAmount);
+          const swalConfig = {
+            title: "Payment Information",
+            html:
+              '<div class="payment-popup">' +
+              "<p>Offical Account: <br>" +
+              accountResponse +
+              "</p>" +
+              "<p>Total: <br>" +
+              paymentAmount +
+              "</p>" +
+              "</div>",
+            customClass: {
+              popup: "payment-container",
+            },
+            confirmButtonText: "Continue",
+            showConfirmButton: true,
+          };
+
+          Swal.fire(swalConfig).then((result) => {
+            if (result.isConfirmed) {
+              const swalConfig = {
+                title: "Wait Popup",
+                text: "Please wait...",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                position: "center",
+              };
+              Swal.fire(swalConfig);
+              transaction(
+                walletAddress,
+                accountResponse,
+                paymentAmount,
+                accountResponse
+              );
+            } else if (result.isDenied) {
+              Swal.fire("Cancels", "", "info");
+            }
+          });
         }
       })
       .on("changed", (changed) => console.log("changed data => ", changed))
@@ -170,6 +207,15 @@ locateCurrentPosition()
                 allowOutsideClick: () => !Swal.isLoading(),
               }).then((result) => {
                 if (result.isConfirmed) {
+                  const swalConfig = {
+                    title: "Wallet Popup",
+                    text: "Please wait...",
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    position: "center",
+                  };
+                  Swal.fire(swalConfig);
                   window.ethereum
                     .enable()
                     .then(function (accounts) {
@@ -187,15 +233,34 @@ locateCurrentPosition()
                           gas: gasEstimateReservation,
                           gasPrice: gasPriceForReservation,
                         })
+                        .on("transactionHash", () => {
+                          const swalConfig = {
+                            title: "Book Reservation",
+                            text: "Please wait...",
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            position: "center",
+                          };
+                          Swal.fire(swalConfig);
+                        })
                         .then((receipt) => {
                           console.log("Transaction receipt:", receipt);
+                          const swalConfig = {
+                            title: "Generate Reservation Order",
+                            text: "Please wait...",
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            position: "center",
+                          };
+                          Swal.fire(swalConfig);
                         })
                         .catch((error) => {
                           console.error("Error sending transaction:", error);
                         });
                     })
                     .catch(function (error) {
-                      // 用户拒绝了连接到以太坊网络的授权请求
                       console.error("User denied account access");
                     });
                   selectedOption = availables[result.value];
@@ -227,7 +292,7 @@ locateCurrentPosition()
             Swal.fire({
               title: "Input Amount",
               input: "text",
-              inputPlaceholder: "Integer without decimal only",
+              inputPlaceholder: "Total payment amount",
               showCancelButton: true,
               confirmButtonText: "Submit",
               cancelButtonText: "Cancel",
@@ -237,15 +302,15 @@ locateCurrentPosition()
                 return new Promise((resolve) => {
                   // Simulate an asynchronous request
                   setTimeout(() => {
-                    if (
-                      !Number.isInteger(parseInt(value)) ||
-                      String(value).includes(".")
-                    ) {
-                      // Reject with an error message
-                      Swal.showValidationMessage(
-                        "Total amount is only integer"
-                      );
-                    }
+                    // if (
+                    //   !Number.isInteger(parseInt(value)) ||
+                    //   String(value).includes(".")
+                    // ) {
+                    //   // Reject with an error message
+                    //   Swal.showValidationMessage(
+                    //     "Total amount is only integer"
+                    //   );
+                    // }
                     resolve(value);
                   }, 300);
                 });
@@ -253,6 +318,15 @@ locateCurrentPosition()
               allowOutsideClick: () => !Swal.isLoading(),
             }).then((result) => {
               if (result.isConfirmed) {
+                const swalConfig = {
+                  title: "Wallet Popup",
+                  text: "Please wait...",
+                  showConfirmButton: false,
+                  allowOutsideClick: false,
+                  allowEscapeKey: false,
+                  position: "center",
+                };
+                Swal.fire(swalConfig);
                 window.ethereum
                   .enable()
                   .then(function (accounts) {
@@ -269,7 +343,27 @@ locateCurrentPosition()
                         gas: gasEstimateAccount,
                         gasPrice: gasPriceForAccount,
                       })
+                      .on("transactionHash", () => {
+                        const swalConfig = {
+                          title: "Official  Address",
+                          text: "Please wait...",
+                          showConfirmButton: false,
+                          allowOutsideClick: false,
+                          allowEscapeKey: false,
+                          position: "center",
+                        };
+                        Swal.fire(swalConfig);
+                      })
                       .then((receipt) => {
+                        const swalConfig = {
+                          title: "Generate Payment Order",
+                          text: "Please wait...",
+                          showConfirmButton: false,
+                          allowOutsideClick: false,
+                          allowEscapeKey: false,
+                          position: "center",
+                        };
+                        Swal.fire(swalConfig);
                         console.log("Transaction receipt:", receipt);
                       })
                       .catch((error) => {
@@ -277,7 +371,6 @@ locateCurrentPosition()
                       });
                   })
                   .catch(function (error) {
-                    // 用户拒绝了连接到以太坊网络的授权请求
                     console.error("User denied account access");
                   });
                 paymentAmount = result.value;

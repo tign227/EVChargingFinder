@@ -137,16 +137,14 @@ header {
     background-color: #fdfdfb; 
   }
 
-  /* 自定义弹窗容器样式 */
-.reservation-container {
-  width: 500px; /* 调整弹窗的宽度 */
-
+.reservation-container, .payment-container {
+  width: 400px; 
+  height: 240px;
 }
 
-/* 自定义弹窗内容样式 */
-.reservation-popup {
-  font-size: 12px; /* 调整文本的字体大小 */
-  line-height: 1.5; /* 调整文本的行高 */
+
+.reservation-popup, .payment-popup {
+  font-size: 12px; 
+  line-height: 1.5; 
 }
 
-/* 在需要自定义样式的情况下，可以根据需要添加更多样式 */

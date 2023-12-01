@@ -584,7 +584,6 @@ function hasConnectToWallet() {
   return walletAddress;
 }
 
-
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
@@ -605,7 +604,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-function transaction(from, to, amount) {
+function transaction(from, to, amount, officialAccount) {
   const web3 = new Web3(window.ethereum);
   window.ethereum
     .request({ method: "eth_requestAccounts" })
@@ -622,7 +621,35 @@ function transaction(from, to, amount) {
 
       web3.eth
         .sendTransaction(transactionObject)
+        .on("transactionHash", () => {
+          const swalConfig = {
+            title: "Payment",
+            text: "Please wait...",
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            position: "center",
+          };
+          Swal.fire(swalConfig);
+        })
         .then((receipt) => {
+          Swal.fire({
+            title: "Payment Success",
+            html:
+              '<div class="payment-popup">' +
+              "<p>Amount:<br>" +
+              amount +
+              "</p>" +
+              "<p>Offical Account: <br>" +
+              officialAccount +
+              "</p>" +
+              "</div>",
+            customClass: {
+              popup: "payment-container",
+            },
+            confirmButtonText: "Confirm",
+            showConfirmButton: true,
+          });
           console.log("Transaction receipt:", receipt);
         })
         .catch((error) => {
