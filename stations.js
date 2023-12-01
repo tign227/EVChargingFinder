@@ -2,7 +2,7 @@ const locateCurrentPosition = () =>
   new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        currLoc = [-0.127758, 51.507351];
+        currLoc = [87.16, 23.419654];
         resolve(position);
       },
       (error) => {
@@ -41,12 +41,20 @@ locateCurrentPosition()
         trafficIncidents: false,
       },
     });
-    var currPos = { lat: currLoc[1], lng: currLoc[0] };
-    var marker = new tt.Marker().setLngLat(currPos).addTo(map);
+    let currPos = { lat: currLoc[1], lng: currLoc[0] };
+    const element = document.createElement("div");
+    element.innerHTML =
+      "<img src='img/man.png' style='width: 30px; height: 30px';>";
+    // let element = (document.createElement("div").innerHTML =
+    //   "<img src='img/man.png' style='width: 30px; height: 30px';>");
     var popup = new tt.Popup({ anchor: "top", closeButton: false }).setText(
       "You"
     );
-    marker.setPopup(popup).togglePopup();
+    let marker = new tt.Marker({ element: element })
+      .setLngLat(currPos)
+      .setPopup(popup)
+      .addTo(map);
+    marker.togglePopup();
   })
   .then(() => {
     serviceContract.events
@@ -391,21 +399,8 @@ locateCurrentPosition()
       " " + stations[minPosition].name;
   });
 
-// CV STATION SEQUENCE FOR WEB3 PAYMENT
+// // CV STATION SEQUENCE FOR WEB3 PAYMENT
 let stations = [
-  {
-    lng: -0.13676,
-    lat: 51.507354,
-    name: "Sarada Road, Kolkata",
-  },
-  { lng: -0.14676, lat: 51.507354, name: "Bhubaneswar" },
-  { lng: -0.13276, lat: 51.511089, name: "Barrackpore" },
-  { lng: -0.13276, lat: 51.11089, name: "New Town, Kolkata" },
-  {
-    lng: 88.3916758855774,
-    lat: 22.60846519471392,
-    name: "Khudiram Bose, Kolkata",
-  },
   { lng: 87.05652096301246, lat: 23.664663295419654, name: "Asansol" },
   { lng: 87.81269270154024, lat: 23.273091713247492, name: "Bardhamann" },
   { lng: 87.33730401504803, lat: 22.367995285288448, name: "Kharagpur" },
