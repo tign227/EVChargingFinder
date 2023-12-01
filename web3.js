@@ -578,6 +578,7 @@ let selectOption;
 let stationName;
 let latTemp;
 let lngTemp;
+let paymentAmount;
 
 function hasConnectToWallet() {
   return walletAddress;

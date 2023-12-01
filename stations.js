@@ -87,9 +87,11 @@ locateCurrentPosition()
             confirmButtonText: "Confirm",
             showConfirmButton: true,
           });
-        } else {
+        } else if (event.returnValues._requestType === "Account") {
           console.log("account data received =>", event.returnValues._result);
           accountResponse = event.returnValues._result;
+          Swal.fire("Toal amount: " + paymentAmount);
+          transaction(walletAddress, accountResponse, paymentAmount);
         }
       })
       .on("changed", (changed) => console.log("changed data => ", changed))
@@ -104,7 +106,7 @@ locateCurrentPosition()
         minPosition = i;
       }
       currStation = { lat: stations[i].lat, lng: stations[i].lng };
-      stationName = stations[i].name;
+      let name = stations[i].name;
       let lat = stations[i].lat;
       let lng = stations[i].lng;
       let marker = new tt.Marker({ interactive: true })
@@ -118,18 +120,20 @@ locateCurrentPosition()
         .setText(stations[i].name)
         .setHTML(
           "<p>" +
-            stationName +
+            name +
             '</p><button id="reservation">Reservation</button><button id="pay">Pay Now</button>'
         );
       popup.on("open", (event) => {
         let user = walletAddress;
         latTemp = lat;
         lngTemp = lng;
+        stationName = name;
         const reservationUrl = `https://endpoint-dun.vercel.app/api/reservation?user=${user}&lat=${latTemp}&lng=${lngTemp}`;
         const reservationPath = "message,reservationCode";
 
-        const paymentUrl = `http://endpoint-dun.vercel.app/api/account?yser=${user}&name=${stationName}`;
+        const paymentUrl = `http://endpoint-dun.vercel.app/api/account?user=${user}&station=${name}`;
         const paymentPath = "message,account";
+
         document
           .getElementById("reservation")
           .addEventListener("click", async () => {
@@ -151,8 +155,8 @@ locateCurrentPosition()
               };
 
               const web3 = new Web3(window.ethereum);
-              const gasPrice = await web3.eth.getGasPrice();
-              const gasEstimate = await reservationContract.methods
+              const gasPriceForReservation = await web3.eth.getGasPrice();
+              const gasEstimateReservation = await reservationContract.methods
                 .makeReservation(reservationUrl, reservationPath)
                 .estimateGas({ from: walletAddress });
 
@@ -169,20 +173,19 @@ locateCurrentPosition()
                   window.ethereum
                     .enable()
                     .then(function (accounts) {
-                      const defaultAccount = accounts[0];
-
-                      const methodAbi = reservationContract.methods
-                        .makeReservation(reservationUrl, reservationPath)
-                        .encodeABI();
+                      const methodAbiForReservation =
+                        reservationContract.methods
+                          .makeReservation(reservationUrl, reservationPath)
+                          .encodeABI();
 
                       //reservation
                       web3.eth
                         .sendTransaction({
-                          from: defaultAccount,
+                          from: walletAddress,
                           to: reservationAddress,
-                          data: methodAbi,
-                          gas: gasEstimate,
-                          gasPrice: gasPrice,
+                          data: methodAbiForReservation,
+                          gas: gasEstimateReservation,
+                          gasPrice: gasPriceForReservation,
                         })
                         .then((receipt) => {
                           console.log("Transaction receipt:", receipt);
@@ -214,10 +217,11 @@ locateCurrentPosition()
               });
               return;
             }
-            await accountContract.methods
+            const web3 = new Web3(window.ethereum);
+            const gasEstimateAccount = await accountContract.methods
               .requestAccount(paymentUrl, paymentPath)
-              .call();
-
+              .estimateGas({ from: walletAddress });
+            const gasPriceForAccount = await web3.eth.getGasPrice();
             // Example with input
             // Example with an input field
             Swal.fire({
@@ -249,13 +253,34 @@ locateCurrentPosition()
               allowOutsideClick: () => !Swal.isLoading(),
             }).then((result) => {
               if (result.isConfirmed) {
-                // Handle the confirmed value
-                Swal.fire("Toal amount: " + result.value);
-                transaction(
-                  walletAddress,
-                  "0x5477cE555Ffae19D38c58575403f00BF6fD05ed3",
-                  result.value
-                );
+                window.ethereum
+                  .enable()
+                  .then(function (accounts) {
+                    const methodAbiforAccount = accountContract.methods
+                      .requestAccount(paymentUrl, paymentPath)
+                      .encodeABI();
+
+                    //account request
+                    web3.eth
+                      .sendTransaction({
+                        from: walletAddress,
+                        to: accountAddress,
+                        data: methodAbiforAccount,
+                        gas: gasEstimateAccount,
+                        gasPrice: gasPriceForAccount,
+                      })
+                      .then((receipt) => {
+                        console.log("Transaction receipt:", receipt);
+                      })
+                      .catch((error) => {
+                        console.error("Error sending transaction:", error);
+                      });
+                  })
+                  .catch(function (error) {
+                    // 用户拒绝了连接到以太坊网络的授权请求
+                    console.error("User denied account access");
+                  });
+                paymentAmount = result.value;
               }
             });
           } catch (error) {
