@@ -1,12 +1,10 @@
-const web3 = new Web3(
-  new Web3.providers.WebsocketProvider(
-    "wss://sepolia.infura.io/ws/v3/18219f234a874bed9cde55db88d2b49b"
-  )
-);
+import Web3 from "web3";
+import { useState, useRef, useCallback, useMemo } from "react";
 
 const reservationAddress = "0xA4d6D64E72088248Da7a7229591760D33Fb09632";
 const serviceAddress = "0xdC211bD05a035D2dcFB4D9628589d191c513E91F";
 const accountAddress = "0xb5232d97ee8D4fC68dEd25358b06c9e98D1B6649";
+
 const accountABI = [
   {
     inputs: [
@@ -567,100 +565,94 @@ const serviceABI = [
   },
 ];
 
-const reservationContract = getContract(reservationABI, reservationAddress);
-const serviceContract = getContract(serviceABI, serviceAddress);
-const accountContract = getContract(accountABI, accountAddress);
+export const useWeb3 = () => {
+  const web3Ref = useRef(
+    new Web3(
+      new Web3.providers.WebsocketProvider(
+        "wss://sepolia.infura.io/ws/v3/18219f234a874bed9cde55db88d2b49b"
+      )
+    )
+  );
+  const web3 = web3Ref.current;
 
-let reservationCode;
-let accountResponse;
-let walletAddress;
-let selectOption;
-let stationName;
-let latTemp;
-let lngTemp;
-let paymentAmount;
+  let reservationCode;
+  let accountResponse;
+  //   let walletAddress;
+  const [walletAddress, setWalletAddress] = useState("");
 
-function hasConnectToWallet() {
-  return walletAddress;
-}
+  const hasConnectToWallet = !!walletAddress;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  if (window.ethereum) {
-    const web3 = new Web3(window.ethereum);
-    document
-      .getElementById("connectWalletBtn")
-      .addEventListener("click", async () => {
-        try {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          const accounts = await web3.eth.getAccounts();
-          walletAddress = accounts[0];
-          document.getElementById("connectWalletBtn").innerText = walletAddress;
-        } catch (error) {
-          console.error("Error connecting to wallet:", error);
-        }
-      });
-  } else {
-    console.error("MetaMask is not installed");
-  }
-});
-
-function transaction(from, to, amount, officialAccount) {
-  const web3 = new Web3(window.ethereum);
-  window.ethereum
-    .request({ method: "eth_requestAccounts" })
-    .then((accounts) => {
-      const fromAddress = from;
-      const toAddress = to;
-      const amountInWei = web3.utils.toWei(amount, "ether");
-      const transactionObject = {
-        from: fromAddress,
-        to: toAddress,
-        value: amountInWei,
-        gas: 21000,
-      };
-
-      web3.eth
-        .sendTransaction(transactionObject)
-        .on("transactionHash", () => {
-          const swalConfig = {
-            title: "Payment",
-            text: "Please wait...",
-            showConfirmButton: false,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            position: "center",
-          };
-          Swal.fire(swalConfig);
-        })
-        .then((receipt) => {
-          Swal.fire({
-            title: "Payment Success",
-            html:
-              '<div class="payment-popup">' +
-              "<p>Amount:<br>" +
-              amount +
-              "</p>" +
-              "<p>Offical Account: <br>" +
-              officialAccount +
-              "</p>" +
-              "</div>",
-            customClass: {
-              popup: "payment-container",
-            },
-            confirmButtonText: "Confirm",
-            showConfirmButton: true,
-          });
-          console.log("Transaction receipt:", receipt);
-        })
-        .catch((error) => {
-          console.error("Transaction error:", error);
+  const onConnect = useCallback(async () => {
+    if ((window as any)?.ethereum) {
+      const web3 = new Web3((window as any).ethereum);
+      try {
+        await (window as any).ethereum.request({
+          method: "eth_requestAccounts",
         });
-    })
-    .catch((error) => {
-      console.error("MetaMask connection error:", error);
-    });
-}
+        const accounts = await web3.eth.getAccounts();
+        setWalletAddress(accounts[0]);
+      } catch (error) {
+        console.error("Error connecting to wallet:", error);
+      }
+    } else {
+      console.error("MetaMask is not installed");
+    }
+  }, []);
 
-function getContract(abi, address) {
-  return new web3.eth.Contract(JSON.parse(JSON.stringify(abi)), address);
-}
+  function transaction(from: string, to: string, amount: string) {
+    const web3 = new Web3((window as any).ethereum);
+    (window as any).ethereum
+      .request({ method: "eth_requestAccounts" })
+      .then(() => {
+        const fromAddress = from;
+        const toAddress = to;
+        const amountInWei = web3.utils.toWei(amount, "ether");
+        const transactionObject = {
+          from: fromAddress,
+          to: toAddress,
+          value: amountInWei,
+          gas: 21000,
+        };
+
+        web3.eth
+          .sendTransaction(transactionObject)
+          .then((receipt) => {
+            console.log("Transaction receipt:", receipt);
+          })
+          .catch((error) => {
+            console.error("Transaction error:", error);
+          });
+      })
+      .catch((error: any) => {
+        console.error("MetaMask connection error:", error);
+      });
+  }
+
+  const getContract = useCallback(
+    (abi: any, address: string) => {
+      return new web3.eth.Contract(JSON.parse(JSON.stringify(abi)), address);
+    },
+    [web3]
+  );
+
+  const reservationContract = useMemo(() => {
+    return getContract(reservationABI, reservationAddress);
+  }, [getContract]);
+  const serviceContract = useMemo(() => {
+    return getContract(serviceABI, serviceAddress);
+  }, [getContract]);
+  const accountContract = useMemo(() => {
+    return getContract(accountABI, accountAddress);
+  }, [getContract]);
+
+  return {
+    web3,
+    hasConnectToWallet,
+    walletAddress,
+    reservationContract,
+    serviceContract,
+    accountContract,
+    onConnect,
+    transaction,
+  };
+};
